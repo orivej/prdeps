@@ -1,4 +1,14 @@
 // prdeps prints the dependency graph of a Go package.
+//
+// Usage:
+//
+//     prdeps <importpath>
+//
+// prdeps takes one or more import paths as arguments.
+// An easy way to satisfy this requirement is to use go list:
+//
+//     % prdeps $(go list)        # runs prdeps for the cwd
+//     % prdeps $(go list ./...)  # runs prdeps for a package tree
 package main
 
 import (
@@ -66,6 +76,7 @@ func main() {
 
 	args := flag.Args()
 	if len(args) < 1 {
+		log.Printf("Usage: %s <importpath>\n", os.Args[0])
 		flag.Usage()
 	}
 
