@@ -63,8 +63,10 @@ func printpkg(importpath string, t *template.Template, depth int) {
 		return
 	}
 
-	fmt.Print(spaces(depth))
-	t.Execute(os.Stdout, pkg)
+	t.Execute(os.Stdout, struct {
+		*build.Package
+		Indent string
+	}{Package: pkg, Indent: spaces(depth)})
 	fmt.Println()
 
 	depth++
@@ -89,7 +91,7 @@ func main() {
 	flag.BoolVar(&stdlib, "s", false, "include stdlib")
 	flag.BoolVar(&testimports, "t", false, "print test imports")
 	//flag.BoolVar(&xtestimports, "T", false, "print external test imports")
-	tmpl := flag.String("f", "{{.ImportPath}}:", "output format")
+	tmpl := flag.String("f", "{{.Indent}}{{.ImportPath}}:", "output format")
 	flag.Parse()
 
 	args := flag.Args()
