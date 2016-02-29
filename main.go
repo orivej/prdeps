@@ -12,8 +12,8 @@
 package main
 
 import (
+	"bytes"
 	"flag"
-	"fmt"
 	"go/build"
 	"log"
 	"os"
@@ -24,6 +24,12 @@ import (
 
 // cache of resolved packages
 var pkgcache = make(map[string]*build.Package)
+
+// cache of output at indent level
+var printcache = make(map[struct {
+	int
+	string
+}]string)
 
 var (
 	stdlib       bool // exclude the stdlib
@@ -63,11 +69,22 @@ func printpkg(importpath string, t *template.Template, depth int) {
 		return
 	}
 
-	t.Execute(os.Stdout, struct {
-		*build.Package
-		Indent string
-	}{Package: pkg, Indent: spaces(depth)})
-	fmt.Println()
+	key := struct {
+		int
+		string
+	}{depth, pkg.ImportPath}
+	if out, ok := printcache[key]; ok {
+		os.Stdout.Write([]byte(out))
+	} else {
+		var b bytes.Buffer
+		t.Execute(&b, struct {
+			*build.Package
+			Indent string
+		}{Package: pkg, Indent: spaces(depth)})
+		out := b.Bytes()
+		os.Stdout.Write(out)
+		printcache[key] = string(out)
+	}
 
 	depth++
 	var deps []string
@@ -93,6 +110,7 @@ func main() {
 	//flag.BoolVar(&xtestimports, "T", false, "print external test imports")
 	tmpl := flag.String("f", "{{.Indent}}{{.ImportPath}}:", "output format")
 	flag.Parse()
+	*tmpl += "\n"
 
 	args := flag.Args()
 	if len(args) < 1 {
