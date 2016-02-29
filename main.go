@@ -86,7 +86,6 @@ func printpkg(importpath string, t *template.Template, depth int) {
 		printcache[key] = string(out)
 	}
 
-	depth++
 	var deps []string
 	switch {
 	case testimports && depth == 0:
@@ -99,6 +98,7 @@ func printpkg(importpath string, t *template.Template, depth int) {
 
 	sort.Strings(deps)
 
+	depth++
 	for _, dep := range deps {
 		printpkg(dep, t, depth)
 	}
@@ -107,7 +107,7 @@ func printpkg(importpath string, t *template.Template, depth int) {
 func main() {
 	flag.BoolVar(&stdlib, "s", false, "include stdlib")
 	flag.BoolVar(&testimports, "t", false, "print test imports")
-	//flag.BoolVar(&xtestimports, "T", false, "print external test imports")
+	flag.BoolVar(&xtestimports, "T", false, "print external test imports")
 	tmpl := flag.String("f", "{{.Indent}}{{.ImportPath}}:", "output format")
 	flag.Parse()
 	*tmpl += "\n"
