@@ -35,6 +35,7 @@ var (
 	stdlib       bool // exclude the stdlib
 	testimports  bool // print test imports
 	xtestimports bool // print external test imports
+	maxdepth     int  // maximum depth to follow dependency chains
 )
 
 func spaces(n int) string {
@@ -99,6 +100,9 @@ func printpkg(importpath string, t *template.Template, depth int) {
 	sort.Strings(deps)
 
 	depth++
+	if depth > maxdepth {
+		return
+	}
 	for _, dep := range deps {
 		printpkg(dep, t, depth)
 	}
@@ -108,6 +112,7 @@ func main() {
 	flag.BoolVar(&stdlib, "s", false, "include stdlib")
 	flag.BoolVar(&testimports, "t", false, "print test imports")
 	flag.BoolVar(&xtestimports, "T", false, "print external test imports")
+	flag.IntVar(&maxdepth, "d", 2<<31-1, "maximum recurse depth")
 	tmpl := flag.String("f", "{{.Indent}}{{.ImportPath}}:", "output format")
 	flag.Parse()
 	*tmpl += "\n"
