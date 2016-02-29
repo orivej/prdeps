@@ -17,6 +17,7 @@ import (
 	"go/build"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"text/template"
 )
@@ -24,8 +25,11 @@ import (
 // cache of resolved packages
 var pkgcache = make(map[string]*build.Package)
 
-var stdlib bool
-var tmpl string
+var (
+	stdlib       bool // exclude the stdlib
+	testimports  bool // print test imports
+	xtestimports bool // print external test imports
+)
 
 func spaces(n int) string {
 	return strings.Repeat(" ", n*2)
@@ -64,14 +68,28 @@ func printpkg(importpath string, t *template.Template, depth int) {
 	fmt.Println()
 
 	depth++
-	for _, dep := range pkg.Imports {
+	var deps []string
+	switch {
+	case testimports:
+		deps = pkg.TestImports
+	case xtestimports:
+		deps = pkg.XTestImports
+	default:
+		deps = pkg.Imports
+	}
+
+	sort.Strings(deps)
+
+	for _, dep := range deps {
 		printpkg(dep, t, depth)
 	}
 }
 
 func main() {
 	flag.BoolVar(&stdlib, "s", false, "include stdlib")
-	flag.StringVar(&tmpl, "f", "{{.ImportPath}}:", "output format")
+	flag.BoolVar(&testimports, "t", false, "print test imports")
+	//flag.BoolVar(&xtestimports, "T", false, "print external test imports")
+	tmpl := flag.String("f", "{{.ImportPath}}:", "output format")
 	flag.Parse()
 
 	args := flag.Args()
@@ -80,7 +98,7 @@ func main() {
 		flag.Usage()
 	}
 
-	t, err := template.New("").Parse(tmpl)
+	t, err := template.New("").Parse(*tmpl)
 	if err != nil {
 		log.Fatal(err)
 	}
