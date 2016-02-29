@@ -89,9 +89,9 @@ func printpkg(importpath string, t *template.Template, depth int) {
 	depth++
 	var deps []string
 	switch {
-	case testimports:
+	case testimports && depth == 0:
 		deps = pkg.TestImports
-	case xtestimports:
+	case xtestimports && depth == 0:
 		deps = pkg.XTestImports
 	default:
 		deps = pkg.Imports
