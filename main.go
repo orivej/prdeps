@@ -42,29 +42,30 @@ func spaces(n int) string {
 	return strings.Repeat(" ", n*2)
 }
 
-func loadpkg(importpath string) *build.Package {
+func loadpkg(parent *build.Package, importpath string) *build.Package {
 	pkg, ok := pkgcache[importpath]
 	if ok {
 		return pkg
 	}
 
-	pkg, err := build.Import(importpath, "", 0)
+	pkg, err := build.Import(importpath, parent.Dir, 0)
 	if err != nil {
-		log.Fatalf("could not locate %q: %v", importpath, err)
+		log.Fatalf("can not locate %q dependency %q: %v",
+			parent.Name, importpath, err)
 	}
 
 	pkgcache[pkg.ImportPath] = pkg
 	return pkg
 }
 
-func printpkg(importpath string, t *template.Template, depth int) {
+func printpkg(parent *build.Package, importpath string, t *template.Template, depth int) {
 	switch importpath {
 	case "C", "unsafe":
 		// fake packages, ignore
 		return
 	}
 
-	pkg := loadpkg(importpath)
+	pkg := loadpkg(parent, importpath)
 	if pkg.Goroot && !stdlib {
 		// do not traverse into the stdlib unless requested
 		return
@@ -104,7 +105,7 @@ func printpkg(importpath string, t *template.Template, depth int) {
 		return
 	}
 	for _, dep := range deps {
-		printpkg(dep, t, depth)
+		printpkg(pkg, dep, t, depth)
 	}
 }
 
@@ -129,6 +130,6 @@ func main() {
 	}
 
 	for _, pkg := range args {
-		printpkg(pkg, t, 0)
+		printpkg(&build.Package{}, pkg, t, 0)
 	}
 }
