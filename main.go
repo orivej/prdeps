@@ -113,7 +113,7 @@ func main() {
 	flag.BoolVar(&testimports, "t", false, "print test imports")
 	flag.BoolVar(&xtestimports, "T", false, "print external test imports")
 	flag.IntVar(&maxdepth, "d", 2<<31-1, "maximum recurse depth")
-	tmpl := flag.String("f", "{{.Indent}}{{.ImportPath}}:", "output format")
+	tmpl := flag.String("f", "{{.Indent}}{{.ImportPath}}", "output format")
 	flag.Parse()
 	*tmpl += "\n"
 
